@@ -26,13 +26,13 @@ app.post('/search-events', async (req, res) => {
 
     console.log(`Searching for events for artist: ${artistName}`);
 
-    // Don't manually encode - let axios handle it
+
     console.log(`Artist name: ${artistName}`);
 
-    // Make request to Ticketmaster Discovery API for events
+
     const response = await axios.get('https://app.ticketmaster.com/discovery/v2/events.json', {
       params: {
-        keyword: artistName,  // Remove manual encoding here
+        keyword: artistName,  
         apikey: process.env.API_KEY,
         size: 20,
         sort: 'date,asc',
@@ -43,18 +43,18 @@ app.post('/search-events', async (req, res) => {
 
     const apiData = response.data;
     
-    // Console log the raw data
+
     console.log('=== TICKETMASTER API RESPONSE ===');
     console.log(JSON.stringify(apiData, null, 2));
     
-    // Rest of your code remains the same...
+
     const transformedEvents = [];
     
     if (apiData._embedded && apiData._embedded.events) {
       console.log(`\n=== FOUND ${apiData._embedded.events.length} EVENTS ===`);
       
       apiData._embedded.events.forEach((event, index) => {
-        // Get the best quality image
+
         const getImageUrl = (images) => {
           if (!images || images.length === 0) return '/placeholder-image.jpg';
           
@@ -101,7 +101,7 @@ app.post('/search-events', async (req, res) => {
       console.log(`No events found for "${artistName}"`);
     }
 
-    // Send response back to client
+   
     res.json({
       success: true,
       artist: artistName,
