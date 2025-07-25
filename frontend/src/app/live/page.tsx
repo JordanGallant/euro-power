@@ -1,96 +1,104 @@
-'use client'
-import { useState } from 'react';
+"use client";
+import React, { useEffect, useState } from "react";
 
-export default function SpotifyPlaylistForm() {
-  const [playlistUrl, setPlaylistUrl] = useState('');
-  const [location, setLocation] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [eventType, setEventType] = useState('live');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const Events: React.FC = () => {
+const names = ['Kid Cudi', 'Taylor Swift', 'Drake', 'Billie Eilish', 'The Weeknd', 'Ariana Grande', 'Post Malone', 'Dua Lipa', 'Travis Scott', 'Olivia Rodrigo', 'Harry Styles', 'Bad Bunny', 'Kendrick Lamar', 'SZA', 'Bruno Mars', 'Doja Cat', 'Justin Bieber', 'Beyoncé']
+  const [selectedArtist, setSelectedArtist] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [events, setEvents] = useState<{ title: string; date: string; imageUrl: string; area: string; }[]>([]);
+  const [isLoadingEvents, setIsLoadingEvents] = useState<boolean>(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      // Updated to use the combined endpoint
-      const response = await fetch('http://localhost:3001/playlist/tracks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          playlistUrl,
-        }),
-      });
+  // Fixed function to properly send the artist name as JSON
+const handleArtistSelect = async (artistName: string) => {
+  try {
+    setSelectedArtist(artistName);
+    setIsLoadingEvents(true);
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Response:', data);
-        console.log('Tracks:', data.tracks); // This will log all the tracks
-        alert(`Success! Found ${data.tracks.length} tracks in the playlist.`);
-      } else {
-        const errorData = await response.json();
-        console.error('Error:', errorData);
-        alert(`Error: ${errorData.error || response.statusText}`);
-      }
-    } catch (error) {
-      console.error('Network error:', error);
-      alert('Network error occurred');
-    } finally {
-      setIsSubmitting(false);
+    // Just trim whitespace, don't remove spaces between words
+    const artist = artistName.trim();
+
+    const res = await fetch("http://localhost:3003/search-events", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ artistName: artist }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Error fetching events: ${res.statusText}`);
     }
-  };
 
-  const isValidSpotifyUrl = (url: string) => {
-    return url.includes('spotify.com/playlist/') || url.includes('open.spotify.com/playlist/');
-  };
+    const data = await res.json();
+    console.log(data)
+    setEvents(data.events || []);
+  } catch (err) {
+    console.error("Failed to fetch events:", err);
+    setError(err instanceof Error ? err.message : 'An unknown error occurred');
+    setEvents([]);
+  } finally {
+    setIsLoadingEvents(false);
+  }
+};
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Find Events from Your Playlist
-            </h1>
-            <p className="text-gray-600">
-              Discover live shows and DJ sets based on your Spotify playlist
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Spotify Playlist URL */}
-            <div>
-              <label htmlFor="playlist-url" className="block text-sm font-medium text-gray-700 mb-2">
-                Spotify Playlist URL *
-              </label>
-              <input
-                id="playlist-url"
-                type="url"
-                value={playlistUrl}
-                onChange={(e) => setPlaylistUrl(e.target.value)}
-                placeholder="https://open.spotify.com/playlist/..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors"
-                required
-              />
-              {playlistUrl && !isValidSpotifyUrl(playlistUrl) && (
-                <p className="text-red-500 text-sm mt-1">Please enter a valid Spotify playlist URL</p>
-              )}
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={!playlistUrl || isSubmitting}
-              className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'Fetching Tracks...' : 'Get Playlist Tracks'}
-            </button>
-          </form>
-        </div>
+    <>
+      <div className="relative z-0 min-h-16 w-full flex justify-center items-center text-6xl md:text-9xl font-badeen tracking-[0.2em] mb-16 md:mb-24 text-center px-4">
+        <h1>Upcoming EVENTS</h1>
       </div>
-    </div>
+
+      <div className="flex flex-wrap justify-center gap-4 px-4">
+        {names.map((artist, index) => {
+          const displayName = artist.replace(/-/g, '').replace(/2/g, '');
+
+          return (
+            <button
+              key={index}
+              onClick={() => handleArtistSelect(artist)}
+              className={`px-6 py-2 rounded-xl transition ${selectedArtist === artist
+                ? 'bg-white text-black border border-white'
+                : 'bg-black text-white border border-white hover:bg-white hover:text-black'
+                }`}
+            >
+              {displayName}
+            </button>
+          );
+        })}
+      </div>
+
+      {selectedArtist && (
+        <div className="text-center mt-8">
+          <h2 className="text-xl mb-4">Events for {selectedArtist.replace(/-/g, '').replace(/2/g, '')}</h2>
+
+          {isLoadingEvents ? (
+            <div className="text-center">Loading events...</div>
+          ) : events.length > 0 ? (
+            <div className="flex flex-col items-center gap-4 max-w-3xl mx-auto">
+              {events.map((event, idx) => (
+                <div key={idx} className="bg-black/30 backdrop-blur-sm border border-white/20 p-4 rounded-lg w-full">
+                  <h3 className="text-lg font-bold">{event.title}</h3>
+                  <h3 className="text-lg font-bold">{event.area}</h3>
+                  <img
+                    src={event.imageUrl}
+                    alt={event.title}
+                    className="w-full max-w-md mx-auto rounded-md"
+                  />
+                  <p className="text-sm">{new Date(event.date).toLocaleDateString(undefined, {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center">No upcoming events found for this artist.</div>
+          )}
+        </div>
+      )}
+    </>
   );
-}
+};
+
+export default Events;

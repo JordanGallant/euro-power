@@ -3,7 +3,7 @@ const cheerio = require('cheerio');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 
 // Middleware
 app.use(express.json());
@@ -60,7 +60,6 @@ app.post('/api/scrape-ra', async (req, res) => {
               // COUNTRY
               const areaMatches = [...contentAfterSecond.matchAll(/"urlName":"(.*?)"/g)];
               const areas = areaMatches.map(match => match[1]);
-              console.log(areas)
               const eventMatches = filteredContent.match(/({[^}]*?"__typename":"Event"[^}]*})/g);
               let index = 0;
               
@@ -111,6 +110,7 @@ app.post('/api/scrape-ra', async (req, res) => {
         }
       }
     }
+    console.log(events.events)
 
     console.log(`Found ${events.length} events for ${artistName}`);
     return res.json({ events });

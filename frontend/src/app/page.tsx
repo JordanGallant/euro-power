@@ -18,7 +18,7 @@ const Events: React.FC = () => {
       // Format the artist name as expected by the API
       const artist = artistName.toLowerCase().trim().replace(/\s+/g, '');
 
-      const res = await fetch("http://localhost:3001/api/scrape-ra", {
+      const res = await fetch("http://localhost:3002/api/scrape-ra", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
